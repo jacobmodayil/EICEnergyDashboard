@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="//code.highcharts.com/highcharts.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.js"></script>
+        <style>
+        .huge {
+            font-size: 40px;
+        }
+
+        .panel-green {
+            border-color: #5cb85c;
+        }
+
+        .panel-green > .panel-heading {
+            border-color: #5cb85c;
+            color: #fff;
+            background-color: #5cb85c;
+        }
+
+        .panel-green > a {
+            color: #5cb85c;
+        }
+
+        .panel-green > a:hover {
+            color: #3d8b3d;
+        }
+
+        .panel-red {
+            border-color: #d9534f;
+        }
+
+        .panel-red > .panel-heading {
+            border-color: #d9534f;
+            color: #fff;
+            background: #d9534f;
+        }
+
+        .panel-red > a {
+            color: #d9534f;
+        }
+
+        .panel-red > a:hover {
+            color: #b52b27;
+        }
+
+        .panel-yellow {
+            border-color: #f0ad4e;
+        }
+
+        .panel-yellow > .panel-heading {
+            border-color: #f0ad4e;
+            color: #fff;
+            background: #f0ad4e;
+        }
+
+        .panel-yellow > a {
+            color: #f0ad4e;
+        }
+
+        .panel-yellow > a:hover {
+            color: #df8a13;
+        }
+
+        .iconred{
+        color:#d9534f;
+        }
+
+        .iconyellow{
+        color:#f0ad4e
+        }
+
+        .iconblue{
+          color:blue;
+        }
+
+        .icongreen{
+          color:#3d8b3d;
+        }
+
+        </style>
+    </head>
+    <body>
+
+  <script>
+        //build chart using options above
+        $(document).ready(function(){
+          Highcharts.setOptions({
+	global: {
+		useUTC: false
+	}
+});
+Highcharts.createElement('link', {
+	href: '//fonts.googleapis.com/css?family=Montserrat',
+	rel: 'stylesheet',
+	type: 'text/css'
+}, null, document.getElementsByTagName('head')[0]);
+
+// Create the theme
+// http://colorbrewer2.org/ for colors options
+Highcharts.theme = {
+
+    //default tableau pallette
+     colors: ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD', '#8C564B', '#CFECF9', '#7F7F7F', '#BCBD22', '#17BECF'],
+
+    //diverging colors from colorbrewer
+  // colors: ['rgb(178,24,43)','rgb(239,138,98)','rgb(253,219,199)','rgb(224,224,224)','rgb(153,153,153)','rgb(77,77,77)'],
+
+    //sequential colors
+  //  colors: ['rgb(241,238,246)','rgb(208,209,230)','rgb(166,189,219)','rgb(116,169,207)','rgb(54,144,192)','rgb(5,112,176)','rgb(3,78,123)'],
+
+    //new PS colors
+
+    //gradient
+     //colors: ['#E80A89', '#F05A28'],
+
+    //blue
+    // colors: ['#1A3A68','#4464AD','#527ACC','#B8DCFF' ],
+
+    //blue - orange
+  //  colors: ['#F05A28','#4464AD' ],
+
+    chart: {
+        backgroundColor:
+        {
+            linearGradient: [0, 0, 500, 500],
+            stops: [
+                [0, 'rgb(255, 255, 255)'],
+                [1, 'rgb(240, 240, 255)']
+            ]
+        },
+    },
+    title: {
+        style: {
+            color: '#343436',
+            font: '22px Montserrat, sans-serif'
+
+        }
+    },
+    subtitle: {
+        style: {
+            color: '#666666',
+            font: '12px Montserrat, sans-serif'
+        }
+    },
+    credits: {
+      enabled: false
+    },
+    legend: {
+        itemStyle: {
+            font: '9pt Montserrat, sans-serif',
+            color: 'black'
+        },
+        itemHoverStyle:{
+            color: 'gray'
+        }
+    }
+};
+
+// Apply the theme
+Highcharts.setOptions(Highcharts.theme);
+
+            getWeeklyEnergyChart();
+            getCurrentEnergySummary();
+        setInterval(function()
+      {
+        window.location.reload();
+      },500000);
+        });
+        function getWeeklyEnergyChart()
+        {
+          var options = {
+             chart: {
+               renderTo: 'container',
+               type: 'areaspline'
+             },
+             legend:{
+               enabled:false
+             },
+             title:{
+               text: 'Energy consumption in the last week',
+               align: 'center'
+             },
+             subtitle:{
+               text: 'past 7 days',
+               align: 'center'
+             },
+             yAxis:{
+               title: {
+                 text: 'Energy'
+               }
+             },
+             xAxis:{
+               type:'datetime',
+               "labels":{
+                 "format":"{value:%e-%b}"
+               }
+             },
+             series:[{}]
+         };
+
+         var today = new Date();
+         var weekAgo = moment().subtract(7,'days')._d;
+         var startDate = weekAgo.getFullYear() + "-" + (weekAgo.getMonth() + 1) + "-" + weekAgo.getDate();
+         var endDate =   today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+         $.getJSON('https://api.enphaseenergy.com/api/v2/systems/759448/energy_lifetime?start_date='+startDate+'&end_date='+endDate+'&key=f758d9b15fe0756996b01601b4ee8360&user_id=4e6a55774e5441770a',function(data)
+       {
+         var energyByWeekList = [];
+         for(var i=0; i< data.production.length; i++)
+         {
+           energyByWeekList.push({
+             dayOfWeek: moment(startDate).add(i, 'day').unix()*1000,
+             energy: data.production[i]
+           });
+
+         }
+
+         var energyByWeekPlotList = [];
+         for(var i=0; i< energyByWeekList.length;i++)
+         {
+           var plotPair = [0,0];
+           plotPair[0] = energyByWeekList[i].dayOfWeek;
+           plotPair[1] = parseInt(energyByWeekList[i].energy);
+           energyByWeekPlotList.push(plotPair);
+         }
+
+         console.log(energyByWeekPlotList);
+         options.series[0].data= energyByWeekPlotList;
+         var chart = new Highcharts.Chart(options);
+       });
+
+        }
+
+        function getCurrentEnergySummary()
+        {
+          var today = new Date();
+          var currentDate =   today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+          $.getJSON('https://api.enphaseenergy.com/api/v2/systems/759448/summary?summary_date=' + currentDate +'&key=f758d9b15fe0756996b01601b4ee8360&user_id=4e6a55774e5441770a',function(data)
+        {
+          var current_power = data.current_power;
+          $("#currentPower").html(current_power);
+          var energy_today = data.energy_today;
+          $("#energyToday").html(energy_today);
+          var energy_lifetime = data.energy_lifetime;
+          $("#energyLifetime").html(energy_lifetime);
+          var active_modules = data.modules;
+          $("#activeModules").html(active_modules);
+        }
+      );
+    }
+        </script>
+        <div id="container"  style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+        <br/>
+        <br/>
+        <div class="col-lg-3 col-md-6">
+        <div class="panel panel-primary">
+          <div class="panel-heading">
+            <h3 class="panel-title">Energy consumed today</h3>
+          </div>
+          <div class="row">
+            <div class="col-xs-3">
+              <i class="fa fa-battery-three-quarters fa-4x iconblue"></i>
+            </div>
+            <div class="col-xs-9 text-right">
+              <div id="currentPower" class="huge"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+      <div class="panel panel-green">
+          <div class="panel-heading">
+            <h3 class="panel-title">Energy Today</h3>
+          </div>
+          <div class="row">
+            <div class="col-xs-3">
+              <i class="fa fa-bolt fa-4x icongreen"></i>
+            </div>
+            <div class="col-xs-9 text-right">
+              <div id="energyToday" class="huge"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+       <div class="panel panel-yellow">
+         <div class="panel-heading">
+           <h3 class="panel-title">Enery Lifetime</h3>
+         </div>
+         <div class="row">
+           <div class="col-xs-3">
+             <i class="fa  fa-area-chart fa-4x iconyellow"></i>
+           </div>
+           <div class="col-xs-9 text-right">
+             <div id="energyLifetime" class="huge"></div>
+           </div>
+         </div>
+       </div>
+     </div>
+
+     <div class="col-lg-3 col-md-6">
+      <div class="panel panel-red">
+        <div class="panel-heading">
+          <h3 class="panel-title">Number of Active Modules</h3>
+        </div>
+        <div class="row">
+          <div class="col-xs-3">
+            <i class="fa fa-power-off fa-4x iconred"></i>
+          </div>
+          <div class="col-xs-9 text-right">
+            <div id="activeModules" class="huge"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+    </body>
+</html>
